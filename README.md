@@ -88,3 +88,56 @@ This workflow improves document accessibility and ensures students can search wi
    CANVAS_API_KEY = "<YOUR_CANVAS_API_TOKEN>"
 
 
+## Usage
+
+The solution is split into two main notebooks:
+
+1. **`Canvas_Bulk_Download.ipynb`**  
+   - **Purpose**: Downloads all non-OCRed files.  
+   - **How to run**:  
+     1. Open the notebook in VS Code or Jupyter Lab.  
+     2. Update the file paths and Canvas credentials.  
+     3. Run all cells.  
+   - **Output**: A local folder containing downloaded PDFs.
+
+2. **Process your PDFs through OCR (done externally)**  
+   - Using **ABBYY FineReader** or another OCR tool, convert the downloaded PDFs to searchable PDFs.
+
+3. **`Canvas_Bulk_Upload.ipynb`**  
+   - **Purpose**: Uploads the newly OCRed PDFs back to Canvas, replacing the original versions.  
+   - **How to run**:  
+     1. Ensure your OCRed PDFs are in the correct folder.  
+     2. Update the file paths (and if needed, the CSV references).  
+     3. Run the notebook.  
+   - **Output**: Canvas courses/files are updated with the new OCRed PDFs.
+
+## Workflow Diagram
+```rust
+Ally Report CSV  -->  Canvas_Bulk_Download.ipynb  -->  Local Folder
+
+Local Folder   -->  OCR Software (Hot Folder)   -->  OCRed PDFs
+
+OCRed PDFs     -->  Canvas_Bulk_Upload.ipynb    -->  Canvas Files Updated
+```
+
+## FAQ & Troubleshooting
+
+**My files aren’t downloading.**  
+- Check your API token and Canvas domain. Make sure they are correct.  
+- Double-check the Ally report CSV columns are named correctly in the script.
+
+**I get `ModuleNotFoundError` when running notebooks.**  
+- Confirm you’ve installed all dependencies in your current environment.  
+- Use the same interpreter in VS Code that has your packages installed.
+
+**OCRed files aren’t being updated in Canvas.**  
+- Ensure the file IDs match those in the Ally report.  
+- Make sure the script is pointing to the correct folder of OCRed PDFs.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request if you find bugs or want to improve this workflow.
+
+## License
+
+**MIT License** – You are free to modify and distribute this project. See `LICENSE` for details.
