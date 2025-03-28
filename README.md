@@ -1,143 +1,170 @@
 # Canvas BulkFlow
 
-**Canvas BulkFlow** is a two-step solution for batch-downloading PDF files from Canvas, running them through OCR (via a third-party tool), and then batch-uploading the newly OCRed files back to Canvas.
+A Python-based workflow to **bulk download** non-OCR’d PDF files from Canvas, run them through an OCR process, and then **bulk upload** (replace) those PDFs in Canvas with their OCRed versions.
 
 ## Table of Contents
-1. [Overview](#overview)  
-2. [Features](#features)  
-3. [Prerequisites](#prerequisites)  
-4. [Installation](#installation)  
-5. [Usage](#usage)  
-6. [Workflow Diagram](#workflow-diagram)  
-7. [FAQ & Troubleshooting](#faq--troubleshooting)  
-8. [Contributing](#contributing)  
-9. [License](#license)
+- [Overview](#overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [Usage](#usage)
+  - [1. Bulk Download](#1-bulk-download)
+  - [2. OCR the Files](#2-ocr-the-files)
+  - [3. Bulk Upload](#3-bulk-upload)
+- [Configuration](#configuration)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
 ## Overview
 
-Many institutions use Canvas for course content management. However, PDFs in Canvas might be non-OCRed (i.e., not searchable). **Canvas BulkFlow** automates:
+Many Canvas courses contain PDFs that are not accessible (i.e., not OCRed). Manually downloading, OCRing, and re-uploading them is time-consuming. **Canvas BulkFlow** automates this process:
 
-1. **Bulk Download**: Pulling non-OCRed PDFs from Canvas (identified via an Ally report or another listing).  
-2. **OCR Conversion**: Converting the downloaded files into OCRed PDFs using third-party software (e.g., ABBYY FineReader).  
-3. **Bulk Upload**: Replacing the original files in Canvas with their new, searchable PDF versions.
-
-This workflow improves document accessibility and ensures students can search within course materials more easily.
+1. **Download** all non-OCRed PDFs from a Canvas course (or multiple courses).
+2. **Run an OCR tool** (like ABBYY FineReader) on the downloaded PDFs.
+3. **Upload** (replace) the PDFs on Canvas with their newly OCRed versions.
 
 ---
 
 ## Features
 
-- **Batch Handling**: Download and upload large collections of PDFs with a single script execution.  
-- **Canvas API Integration**: Uses [`canvasapi`](https://github.com/ucfopen/canvasapi) to interact with Canvas LMS.  
-- **Ally-Report Based**: Reads an Ally report (or a similar CSV) to identify file IDs and names.  
-- **Modular Notebooks**: Two Jupyter notebooks (or Python scripts) for clear separation of tasks.
+- **Bulk Download**: Fetch multiple PDF files from Canvas using their file IDs.
+- **Bulk Upload (Replace)**: Overwrite existing Canvas PDFs with the newly OCRed files.
+- **Uses CSV**: Reads file IDs, filenames, and other metadata from a CSV file (generated from an Ally report or other sources).
+- **Simple Python Scripts**: No heavy dependencies beyond `requests` and `pandas`.
 
 ---
 
 ## Prerequisites
 
-1. **Canvas API Credentials**  
-   - You need a valid API token (Canvas Access Token) from your Canvas LMS.  
-   - Set the environment variable or store it in a config file for secure usage.
+1. **Python 3.8+**  
+   - Download and install from [python.org](https://www.python.org/downloads/).  
+   - Ensure it’s on your system PATH.
 
-2. **Ally Report (or equivalent CSV)**  
-   - A CSV or similar file listing the Canvas file IDs, filenames, etc.  
-   - Adjust the code if your CSV format differs from the default Ally format.
+2. **Git** (optional but recommended)  
+   - For version control. Download from [git-scm.com](https://git-scm.com/).
 
-3. **Python 3.7+**  
-   - Make sure you’re running a recent version of Python to match the libraries used.
+3. **Canvas API Token**  
+   - Generate a personal access token in your Canvas account settings.  
+   - Keep it **private**. Don’t commit it to a public repository.
 
-4. **Python Libraries**  
-   - [`canvasapi`](https://pypi.org/project/canvasapi/)  
-   - `requests`  
-   - Any other libraries mentioned in your `requirements.txt` or notebooks.
+4. **CSV File**  
+   - A CSV (e.g., from an Ally report) containing at least:
+     - `Id` (Canvas File ID)
+     - `Name` (Filename)
+     - `Mime type` (Optional but used for filtering)
+     - `Ocred:2` or similar column for identifying non-OCRed files
 
-5. **OCR Software** (e.g., ABBYY FineReader)  
-   - Not directly included in this repo.  
-   - Configure your OCR solution to watch a “Hot Folder” or follow the process you use for batch OCR.
+5. **OCR Software**  
+   - Example: ABBYY FineReader (or any tool that can process PDFs in bulk).
 
 ---
 
-## Installation
+## Setup
 
-1. **Clone the Repository**  
+1. **Clone or Download this Repo**  
    ```bash
-   git clone https://github.com/YOUR_USERNAME/Canvas-BulkFlow.git
-   cd Canvas-BulkFlow
-
+   git clone https://github.com/RifatIbnAlam/Canvas-Bulkflow.git
+   cd Canvas-Bulkflow
    
 2. **Create and Activate a Virtual Environment (recommended)**
    ```bash
-   python -m venv venv
-   source venv/bin/activate   # On macOS/Linux
+   # Activate it:
 
-   ## Or
+   # On Windows:
+   .\venv\Scripts\activate
 
-   venv\Scripts\activate      # On Windows
+   # On macOS/Linux:
+   source venv/bin/activate
+
 
 3. **Install Required Dependencies**
    ```bash
-   pip install -r requirements.txt
+   pip install requests pandas
 
    
 4. **Configure Your Canvas API Key**
    ```bash
-   CANVAS_API_URL = "https://<YOUR_CANVAS_DOMAIN>/api/v1"
-   CANVAS_API_KEY = "<YOUR_CANVAS_API_TOKEN>"
-
+   # Open each script (canvas_bulk_download.py, canvas_bulk_upload.py) and update canvas_token with your actual Canvas token
 
 ## Usage
 
-The solution is split into two main notebooks:
+### 1. Bulk Download
 
-1. **`Canvas_Bulk_Download.ipynb`**  
-   - **Purpose**: Downloads all non-OCRed files.  
-   - **How to run**:  
-     1. Open the notebook in VS Code or Jupyter Lab.  
-     2. Update the file paths and Canvas credentials.  
-     3. Run all cells.  
-   - **Output**: A local folder containing downloaded PDFs.
+#### Prepare CSV
+Ensure your CSV includes columns like **Id**, **Name**, **Mime type**, **Ocred:2** (or whichever columns you need).  
+Example: `YourExcelFile.csv`
 
-2. **Process your PDFs through OCR (done externally)**  
-   - Using **ABBYY FineReader** or another OCR tool, convert the downloaded PDFs to searchable PDFs.
+#### Edit `canvas_bulk_download.py`
+- Update the `csv_file` path to point to your CSV.
+- Update the `output_folder` to where you want PDFs saved.
 
-3. **`Canvas_Bulk_Upload.ipynb`**  
-   - **Purpose**: Uploads the newly OCRed PDFs back to Canvas, replacing the original versions.  
-   - **How to run**:  
-     1. Ensure your OCRed PDFs are in the correct folder.  
-     2. Update the file paths (and if needed, the CSV references).  
-     3. Run the notebook.  
-   - **Output**: Canvas courses/files are updated with the new OCRed PDFs.
+#### Run the Script
+   ```bash
+   python canvas_bulk_download.py
+   ```
 
-## Workflow Diagram
-```rust
-Ally Report CSV  -->  Canvas_Bulk_Download.ipynb  -->  Local Folder
+### 2. OCR the Files
 
-Local Folder   -->  OCR Software (Hot Folder)   -->  OCRed PDFs
+Use your chosen OCR tool (e.g., ABBYY FineReader) to convert the downloaded PDFs in bulk.  
+By default, you might place the OCRed files into a folder such as `Downloads/OCRed/`.
 
-OCRed PDFs     -->  Canvas_Bulk_Upload.ipynb    -->  Canvas Files Updated
-```
+---
 
-## FAQ & Troubleshooting
+### 3. Bulk Upload
 
-**My files aren’t downloading.**  
-- Check your API token and Canvas domain. Make sure they are correct.  
-- Double-check the Ally report CSV columns are named correctly in the script.
+#### Edit `canvas_bulk_upload.py`
+- Update the `csv_file` path to point to the same or a merged CSV with the correct columns.
+- Update `ocr_folder` (or the logic that builds the local file path) to match where your OCRed PDFs are located.
+- Confirm the correct column names (e.g., **Id** for file ID, **Name** for the local filename).
 
-**I get `ModuleNotFoundError` when running notebooks.**  
-- Confirm you’ve installed all dependencies in your current environment.  
-- Use the same interpreter in VS Code that has your packages installed.
+#### Run the Script
+   ```bash
+   python canvas_bulk_upload.py
+   ```
+This replaces the existing files in Canvas with the OCRed versions.
 
-**OCRed files aren’t being updated in Canvas.**  
-- Ensure the file IDs match those in the Ally report.  
-- Make sure the script is pointing to the correct folder of OCRed PDFs.
+---
+
+## Configuration
+
+- **Canvas Token:**  
+  Hardcode in the script or load from environment variables.
+- **Base URL:**  
+  Currently set to `https://usu.instructure.com`. Change if your Canvas instance has a different domain.
+- **CSV Columns:**  
+  Adjust the scripts if your CSV columns differ (for example, if you have `File_ID` instead of `Id`).
+
+---
+
+## FAQ
+
+**What if I have multiple courses?**  
+You can merge multiple CSVs (one per course) into a single CSV as long as each file’s ID is unique. The ID is globally unique across Canvas, so the script will handle each file accordingly. Make sure your local OCRed filenames don’t collide if two different courses have the same “Name.”
+
+**Do I need to worry about duplicate filenames (like `Syllabus.pdf`)?**  
+Canvas identifies files by their file ID, not by the filename. However, locally, you might want to rename your OCRed files or organize them into subfolders to avoid overwriting files.
+
+**Why do I get a PermissionError on Windows?**  
+Ensure the folder path is valid and you have permission to write/read in that directory. Avoid placing your scripts or data in restricted system folders.
+
+**Why am I getting 401 or 403 errors?**  
+Make sure your Canvas token is valid and has the correct permissions. Double-check the base URL for your Canvas instance.
+
+---
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request if you find bugs or want to improve this workflow.
+1. **Fork** this repository.
+2. **Create a feature branch** by typing: `git checkout -b my-feature`
+3. **Commit your changes** by typing: `git commit -m 'Add some feature'`
+4. **Push to the branch** by typing: `git push origin my-feature`
+5. **Open a Pull Request** on GitHub.
+
+---
 
 ## License
 
-**MIT License** – You are free to modify and distribute this project. See `LICENSE` for details.
+This project is available under the **MIT License**. Feel free to modify and distribute as needed.
