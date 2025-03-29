@@ -10,8 +10,8 @@ import time
 csv_file = "YourExcelFile.csv"
 df = pd.read_csv(csv_file)
 
-# 2. Filter DataFrame: only rows with Mime type == 'application/pdf' and Ocred:2 == 0
-df = df[(df['Mime type'] == 'application/pdf') & (df['Ocred:2'] == 0)]
+# 2. Filter DataFrame: only rows with Mime type == 'application/pdf' and Scanned:1 == 1
+df = df[(df['Mime type'] == 'application/pdf') & (df['Scanned:1'] == 1)]
 df.info()
 
 # 3. Columns in your CSV containing file info
