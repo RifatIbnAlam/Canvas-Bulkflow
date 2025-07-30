@@ -50,7 +50,7 @@ Many Canvas courses contain PDFs that are not accessible (i.e., not OCRed). Manu
    - Generate a personal access token in your Canvas account settings.  
    - Keep it **private**. Don’t commit it to a public repository.
 
-4. **CSV File**  
+4. **CSV File from Ally Report**  
    - A CSV (e.g., from an Ally report) containing at least:
      - `Id` (Canvas File ID)
      - `Name` (Filename)
